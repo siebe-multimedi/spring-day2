@@ -52,7 +52,7 @@ class PersistenceContextTest {
     @Test
     void step2_detached_theChangeIsNotStored() {
         Customer detached = service.load(annId);
-        detached.setName("Changed");   // nobody is watching this object
+        detached.setName("Changed");
 
         Customer reloaded = service.load(annId);
         System.out.println("[persistence] step 2: after the change, load() returns the name: " + reloaded.getName());

@@ -18,7 +18,12 @@ public class OrderListener {
     /** In a real application this is a message listener (with Spring AMQP: @RabbitListener). */
     @Transactional
     public void handle(String messageId, Long orderId) {
-        // TODO bonus: ignore a message that was handled before (see ProcessedMessage)
+        if (processed.existsById(messageId)) {
+            System.out.println("[messaging] duplicate message " + messageId + " ignored");
+            return;
+        }
+        // same transaction as the work: if the work fails, the id is not stored and a redelivery is handled again
+        processed.save(new ProcessedMessage(messageId));
         warehouse.reserve(orderId);
     }
 }

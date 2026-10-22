@@ -17,12 +17,17 @@ public class OrderService {
         this.audit = audit;
     }
 
-    @Transactional
-    public void placeOrder(Order order) {
-        audit.log("placing order");
+    @Transactional(rollbackFor = OrderRejectedException.class)
+    public void placeOrder(Order order) throws OrderRejectedException {
+        try {
+            audit.log("placing order");
+        } catch (RuntimeException e) {
+            // the audit runs in its own transaction: its failure must not stop the order
+            System.out.println("[transactions] audit failed, the order goes on: " + e.getMessage());
+        }
         orders.save(order);
         if (order.getAmount() > 1000) {
-            throw new IllegalStateException("Amount too high!");
+            throw new OrderRejectedException("Amount too high!");
         }
     }
 }

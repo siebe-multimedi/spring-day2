@@ -19,7 +19,8 @@ public class CustomerService {
     /** Step 1: change the name of a customer, WITHOUT calling save(). */
     @Transactional
     public void rename(Long id, String newName) {
-        // TODO step 1: load the customer and change its name. Do NOT call save().
+        Customer customer = repository.findById(id).orElseThrow();
+        customer.setName(newName);
     }
 
     /** Step 2: this method has no @Transactional, and the test that calls it has none either. */
@@ -32,7 +33,9 @@ public class CustomerService {
     public void changeEmail(Long id, String email) {
         lastCallCaughtInside = false;
         try {
-            // TODO step 3: load the customer and give it the new email
+            Customer customer = repository.findById(id).orElseThrow();
+            customer.setEmail(email);
+            repository.flush();   // send the UPDATE now, so a constraint violation surfaces inside the try
         } catch (DataIntegrityViolationException e) {
             lastCallCaughtInside = true;
             System.out.println("[persistence] step 3: the exception was caught INSIDE changeEmail()");

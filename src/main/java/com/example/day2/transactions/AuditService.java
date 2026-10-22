@@ -1,6 +1,7 @@
 package com.example.day2.transactions;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -19,7 +20,7 @@ public class AuditService {
         this.failing = failing;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void log(String message) {
         audits.save(new AuditEntry(message));
         if (failing) {
@@ -28,7 +29,7 @@ public class AuditService {
     }
 
     /** Bonus: this method should only ever run inside an existing transaction. */
-    @Transactional
+    @Transactional(propagation = Propagation.MANDATORY)
     public void logInExistingTransaction(String message) {
         audits.save(new AuditEntry(message));
     }

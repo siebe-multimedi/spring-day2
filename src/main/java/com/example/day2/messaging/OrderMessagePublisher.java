@@ -1,8 +1,13 @@
 package com.example.day2.messaging;
 
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
-/** Step 2: send the message AFTER the commit. */
+/**
+ * Step 2: send the message AFTER the commit.
+ * Since step 4 OrderService no longer publishes OrderPlaced: the outbox replaced this listener.
+ */
 @Component
 public class OrderMessagePublisher {
 
@@ -12,9 +17,9 @@ public class OrderMessagePublisher {
         this.broker = broker;
     }
 
-    // TODO step 2: write a method that receives an OrderPlaced event and sends the message,
-    //              but only after the transaction has committed.
-    //              (hint: @TransactionalEventListener)
-    //              OrderService must publish the event with an ApplicationEventPublisher,
-    //              instead of calling the broker itself.
+    /** Only runs when the transaction that published the event has committed: a rollback sends nothing. */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void on(OrderPlaced event) {
+        broker.send("orders", event.orderId());
+    }
 }

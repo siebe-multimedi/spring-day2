@@ -10,17 +10,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrderService {
 
     private final OrderRepository orders;
-    private final MessageBroker broker;
+    private final OutboxRepository outbox;
 
-    public OrderService(OrderRepository orders, MessageBroker broker) {
+    public OrderService(OrderRepository orders, OutboxRepository outbox) {
         this.orders = orders;
-        this.broker = broker;
+        this.outbox = outbox;
     }
 
     @Transactional
     public void placeOrder(Order order) {
         orders.save(order);
-        broker.send("orders", order.getId());   // the problem: sent before the commit
+        // Step 4: the message is a row in the same transaction: both are committed, or neither.
+        // OutboxPublisher sends it later. (This replaces the OrderPlaced event of step 2.)
+        outbox.save(new OutboxMessage("orders", order.getId()));
         if (order.getAmount() > 1000) {
             throw new IllegalStateException("Amount too high!");
         }
